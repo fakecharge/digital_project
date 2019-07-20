@@ -33,49 +33,41 @@ else:
 
 net = cv2.dnn.readNetFromCaffe(args.prototxt, args.weights)
 while True:
-    # Capture frame-by-frame
     ret, frame = cap.read()
-    frame_resized = cv2.resize(frame,(300,300)) # resize frame for prediction
-    cv2.imshow("Test", frame)
-    # MobileNet requires fixed dimensions for input image(s)
-    # so we have to ensure that it is resized to 300x300 pixels.
-    # set a scale factor to image because network the objects has differents size.
-    # We perform a mean subtraction (127.5, 127.5, 127.5) to normalize the input;
-    # after executing this command our "blob" now has the shape:
-    # (1, 3, 300, 300)
+    frame_resized = cv2.resize(frame,(800,600)) # resize frame for prediction
+    #cv2.imshow("Test", frame)
+
     blob = cv2.dnn.blobFromImage(frame_resized, 0.007843, (300, 300), (127.5, 127.5, 127.5), False)
-    #Set to network the input blob
     net.setInput(blob)
-    #Prediction of network
     detections = net.forward()
 
-    #Size of frame resize (300x300)
     cols = frame_resized.shape[1]
     rows = frame_resized.shape[0]
-    #For get the class and location of object detected,
-    # There is a fix index for class, location and confidence
-    # value in @detections array .
     for i in range(detections.shape[2]):
-        confidence = detections[0, 0, i, 2] #Confidence of prediction
-        if confidence > args.thr: # Filter prediction
-            class_id = int(detections[0, 0, i, 1]) # Class label
-            # Object location
+        class_id = int(detections[0, 0, i, 1])
+        if not class_id == 6:
+            continue
+        confidence = detections[0, 0, i, 2]
+        if confidence > args.thr:
+            class_id = int(detections[0, 0, i, 1])
             xLeftBottom = int(detections[0, 0, i, 3] * cols)
             yLeftBottom = int(detections[0, 0, i, 4] * rows)
             xRightTop   = int(detections[0, 0, i, 5] * cols)
             yRightTop   = int(detections[0, 0, i, 6] * rows)
-            # Factor for scale to original size of frame
-            heightFactor = frame.shape[0] / 300.0
-            widthFactor = frame.shape[1] / 300.0
-            # Scale object detection to frame
+
+            heightFactor = frame.shape[0] / 600.0
+            widthFactor = frame.shape[1] / 800.0
+
             xLeftBottom = int(widthFactor * xLeftBottom)
             yLeftBottom = int(heightFactor * yLeftBottom)
             xRightTop = int(widthFactor * xRightTop)
             yRightTop = int(heightFactor * yRightTop)
-            # Draw location of object
+
             cv2.rectangle(frame, (xLeftBottom, yLeftBottom), (xRightTop, yRightTop),
                           (0, 255, 0))
-            # Draw label and confidence of prediction in frame resized
+            roi = frame[yLeftBottom:yRightTop, xLeftBottom:xRightTop]
+            cv2.imshow("roi", roi)
+
             if class_id in classNames:
                 label = classNames[class_id] + ": " + str(confidence)
                 labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
@@ -88,6 +80,6 @@ while True:
                 print(label)
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.imshow("frame", frame)
-    if cv2.waitKey(1) >= 0:  # Break with ESC
+    if cv2.waitKey(300) >= 0:
         break
     pass
