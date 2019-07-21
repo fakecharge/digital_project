@@ -1,2 +1,4 @@
 # digital_project
-# test from Nastya
+
+Проект для конкурса в ЦИФРОВОЙ ПРОРЫВ! 2019
+Проект команды inNINO
