@@ -34,7 +34,7 @@ else:
 net = cv2.dnn.readNetFromCaffe(args.prototxt, args.weights)
 while True:
     ret, frame = cap.read()
-    frame_resized = cv2.resize(frame,(800,600)) # resize frame for prediction
+    frame_resized = cv2.resize(frame,(300,300)) # resize frame for prediction
     #cv2.imshow("Test", frame)
 
     blob = cv2.dnn.blobFromImage(frame_resized, 0.007843, (300, 300), (127.5, 127.5, 127.5), False)
@@ -43,10 +43,13 @@ while True:
 
     cols = frame_resized.shape[1]
     rows = frame_resized.shape[0]
+    k = 0
     for i in range(detections.shape[2]):
         class_id = int(detections[0, 0, i, 1])
-        if not class_id == 6:
+        if not class_id == 6 and not class_id == 15:
             continue
+        if class_id == 15:
+            k += 1
         confidence = detections[0, 0, i, 2]
         if confidence > args.thr:
             class_id = int(detections[0, 0, i, 1])
@@ -55,8 +58,8 @@ while True:
             xRightTop   = int(detections[0, 0, i, 5] * cols)
             yRightTop   = int(detections[0, 0, i, 6] * rows)
 
-            heightFactor = frame.shape[0] / 600.0
-            widthFactor = frame.shape[1] / 800.0
+            heightFactor = frame.shape[0] / 300.0
+            widthFactor = frame.shape[1] / 300.0
 
             xLeftBottom = int(widthFactor * xLeftBottom)
             yLeftBottom = int(heightFactor * yLeftBottom)
@@ -78,6 +81,8 @@ while True:
                 cv2.putText(frame, label, (xLeftBottom, yLeftBottom),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
                 print(label)
+    cv2.putText(frame, "Кол-во людей: " + str(k), (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 30, (255, 255, 0))
+    print(k)
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.imshow("frame", frame)
     if cv2.waitKey(300) >= 0:
